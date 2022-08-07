@@ -22,6 +22,23 @@ void wdt_reset() {
   __asm__ __volatile__ ("wdr"::);
 }
 
+void rtc_init(void) {
+    // wait for rtc
+    while (RTC.STATUS > 0);
+
+    RTC.CLKSEL = RTC_CLKSEL_INT1K_gc;       // 1kHz internal oscillator
+
+    RTC.PITINTCTRL = RTC_PI_bm;             // periodic interrupt enabled
+
+    RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc   // RTC clock cycles 32768 (32 seconds at 1Khz)
+    | RTC_PITEN_bm;                         // enable
+}
+
+// periodic rtc interrupt service routine
+ISR(RTC_PIT_vect) {
+  RTC.PITINTFLAGS = RTC_PI_bm;              // clear the pit
+}
+
 // the setup function runs once when you press reset or power the board
 void setup() {
   Serial.begin(115200);
@@ -40,11 +57,13 @@ void setup() {
   pinMode(EN_OUT_PIN, OUTPUT);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   sleep_enable();
+
+  rtc_init();
+  sei();
 }
 
 // the loop function runs over and over again forever
 void loop() {
-  wdt_enable();
   unsigned long start_time = millis();
   Serial.println("started");
   
@@ -57,6 +76,6 @@ void loop() {
 
   Serial.println("going to sleep");
   Serial.flush();
-  wdt_reset();
+
   sleep_cpu();
 }
