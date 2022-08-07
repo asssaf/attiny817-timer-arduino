@@ -65,7 +65,9 @@ void setup() {
 // the loop function runs over and over again forever
 void loop() {
   unsigned long start_time = millis();
-  Serial.println("started");
+  String start_msg = "started: ";
+  start_msg = start_msg + start_time;
+  Serial.println(start_msg);
   
   digitalWrite(LED_BUILTIN, LOW);         // turn the LED on
   digitalWrite(EN_OUT_PIN, HIGH);         // set enable pin high
